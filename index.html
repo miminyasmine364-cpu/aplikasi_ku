@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pengingat Jadwal Piket Kelas</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #dbeafe, #f0f9ff);
+      min-height: 100vh;
+      padding: 30px;
+      color: #1e293b;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+    }
+
+    header {
+      background: #2563eb;
+      color: white;
+      padding: 25px;
+      border-radius: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    header h1 {
+      margin-bottom: 8px;
+    }
+
+    .info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+
+    .today {
+      text-align: center;
+    }
+
+    .today h2 {
+      color: #2563eb;
+      margin: 10px 0;
+    }
+
+    .form {
+      margin-bottom: 20px;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      font-size: 15px;
+    }
+
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    .jadwal {
+      display: grid;
+      gap: 12px;
+    }
+
+    .hari {
+      background: white;
+      padding: 18px;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .hari h3 {
+      color: #2563eb;
+      margin-bottom: 10px;
+    }
+
+    .anggota {
+      background: #eff6ff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin: 5px 0;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .hapus {
+      width: auto;
+      margin: 0;
+      padding: 5px 10px;
+      background: #ef4444;
+    }
+
+    .hapus:hover {
+      background: #dc2626;
+    }
+
+    .peringatan {
+      background: #fef3c7;
+      color: #92400e;
+      padding: 15px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 15px;
+      }
+
+      .info {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <header>
+      <h1>🧹 Jadwal Piket Kelas</h1>
+      <p>Aplikasi Pengingat Jadwal Piket</p>
+    </header>
+
+    <div class="info">
+
+      <div class="card today">
+        <p>Hari ini</p>
+        <h2 id="hariIni"></h2>
+        <p id="tanggal"></p>
+      </div>
+
+      <div class="card today">
+        <p>Petugas Piket Hari Ini</p>
+        <h2 id="petugasHariIni">-</h2>
+      </div>
+
+    </div>
+
+    <div class="peringatan" id="peringatan">
+      🔔 Jangan lupa melaksanakan piket kelas!
+    </div>
+
+    <div class="card form">
+      <h2>➕ Tambah Jadwal</h2>
+
+      <input
+        type="text"
+        id="nama"
+        placeholder="Masukkan nama siswa"
+      >
+
+      <select id="hari">
+        <option value="Senin">Senin</option>
+        <option value="Selasa">Selasa</option>
+        <option value="Rabu">Rabu</option>
+        <option value="Kamis">Kamis</option>
+        <option value="Jumat">Jumat</option>
+      </select>
+
+      <button onclick="tambahJadwal()">
+        Tambahkan Jadwal
+      </button>
+    </div>
+
+    <div class="jadwal" id="jadwal"></div>
+
+  </div>
+
+<script>
+
+  const hariList = [
+    "Senin",
+    "Selasa",
+    "Rabu",
+    "Kamis",
+    "Jumat"
+  ];
+
+  let jadwal = JSON.parse(localStorage.getItem("jadwalPiket")) || {
+    Senin: [],
+    Selasa: [],
+    Rabu: [],
+    Kamis: [],
+    Jumat: []
+  };
+
+  function tampilkanHari() {
+
+    const sekarang = new Date();
+
+    const namaHari = [
+      "Minggu",
+      "Senin",
+      "Selasa",
+      "Rabu",
+      "Kamis",
+      "Jumat",
+      "Sabtu"
+    ];
+
+    const hari = namaHari[sekarang.getDay()];
+
+    document.getElementById("hariIni").textContent = hari;
+
+    document.getElementById("tanggal").textContent =
+      sekarang.toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+      });
+
+    if (jadwal[hari]) {
+
+      if (jadwal[hari].length > 0) {
+
+        document.getElementById("petugasHariIni").textContent =
+          jadwal[hari].join(", ");
+
+      } else {
+
+        document.getElementById("petugasHariIni").textContent =
+          "Belum ada";
+
+      }
+
+    } else {
+
+      document.getElementById("petugasHariIni").textContent =
+        "Libur";
+
+    }
+  }
+
+
+  function tampilkanJadwal() {
+
+    const container = document.getElementById("jadwal");
+
+    container.innerHTML = "";
+
+    hariList.forEach(hari => {
+
+      const div = document.createElement("div");
+
+      div.className = "hari";
+
+      let isi = `
+        <h3>📅 ${hari}</h3>
+      `;
+
+      if (jadwal[hari].length === 0) {
+
+        isi += "<p>Belum ada petugas.</p>";
+
+      } else {
+
+        jadwal[hari].forEach((nama, index) => {
+
+          isi += `
+            <div class="anggota">
+              <span>👤 ${nama}</span>
+
+              <button
+                class="hapus"
+                onclick="hapusJadwal('${hari}', ${index})">
+                Hapus
+              </button>
+            </div>
+          `;
+
+        });
+
+      }
+
+      div.innerHTML = isi;
+
+      container.appendChild(div);
+
+    });
+
+  }
+
+
+  function tambahJadwal() {
+
+    const nama =
+      document.getElementById("nama").value.trim();
+
+    const hari =
+      document.getElementById("hari").value;
+
+    if (nama === "") {
+
+      alert("Masukkan nama siswa terlebih dahulu!");
+
+      return;
+
+    }
+
+    jadwal[hari].push(nama);
+
+    localStorage.setItem(
+      "jadwalPiket",
+      JSON.stringify(jadwal)
+    );
+
+    document.getElementById("nama").value = "";
+
+    tampilkanJadwal();
+    tampilkanHari();
+
+    alert("Jadwal berhasil ditambahkan! ✅");
+  }
+
+
+  function hapusJadwal(hari, index) {
+
+    jadwal[hari].splice(index, 1);
+
+    localStorage.setItem(
+      "jadwalPiket",
+      JSON.stringify(jadwal)
+    );
+
+    tampilkanJadwal();
+    tampilkanHari();
+
+  }
+
+
+  tampilkanHari();
+  tampilkanJadwal();
+
+</script>
+
+</body>
+</html>
